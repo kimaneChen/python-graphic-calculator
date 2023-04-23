@@ -28,8 +28,11 @@ window.layout(layout)
 window.finalize()
 
 graph=window["graph"]
+for x in range(-100,100):
+    y = math.sin(x/20)*50
+    graph.DrawCircle((x,y), 1, line_color='red', fill_color='red')
 graphWindowLocation=[[-10,-7.2],[10,7.2]]
-gridWidth=0.45
+gridWidth=0.5
 
 def changeGrid(graphWindowLocation,gridWidth):
     if (graphWindowLocation[1][0]-graphWindowLocation[0][0])/gridWidth<40:
@@ -41,14 +44,26 @@ def changeGrid(graphWindowLocation,gridWidth):
 
 def drawGrid(gridWidth,graphWindowLocation):
     print(graphWindowLocation)
-    for x in range(math.floor(graphWindowLocation[0][0]/gridWidth-1.00),math.ceil(graphWindowLocation[0][1]/gridWidth+1.00)):
-
-        graph.draw_line((graphWindowLocation[0][0], gridWidth*x), (graphWindowLocation[0][1], gridWidth*x), color="#bcbce0", width=1)
-        graph.draw_line((gridWidth*x,graphWindowLocation[0][0]), (gridWidth*x,graphWindowLocation[0][1]), color="#bcbce0", width=1)
-        graph.draw_line((graphWindowLocation[0][0], 5*gridWidth*x), (graphWindowLocation[0][1], 5*gridWidth*x), color="black", width=1)
-        graph.draw_line((5*gridWidth*x,graphWindowLocation[0][0]), (5*gridWidth*x,graphWindowLocation[0][1]), color="black", width=1)
-    graph.draw_line((graphWindowLocation[0][0],0),(graphWindowLocation[0][1],0),color="black",width=4)
-    graph.draw_line((0,graphWindowLocation[1][0]), (0,graphWindowLocation[1][1]), color="black", width=4)
+    print("a")
+    print(str(math.floor(graphWindowLocation[0][0]/gridWidth-1.00)))
+    print(str(math.ceil(graphWindowLocation[0][1]/gridWidth+1.00)))
+    for x in range(math.floor(graphWindowLocation[0][0]/gridWidth),math.ceil(graphWindowLocation[1][0]/gridWidth)):
+        graph.draw_line((graphWindowLocation[0][0], gridWidth*x), (graphWindowLocation[1][0], gridWidth*x), color="#bcbce0", width=1)
+        graph.draw_line((gridWidth*x,graphWindowLocation[0][1]), (gridWidth*x,graphWindowLocation[1][1]), color="#bcbce0", width=1)
+    for x in range(math.floor(graphWindowLocation[0][0] / gridWidth),math.ceil(graphWindowLocation[1][0] / gridWidth)):
+        graph.draw_line((graphWindowLocation[0][0], 5*gridWidth*x), (graphWindowLocation[1][0], 5*gridWidth*x), color="black", width=1)
+        graph.draw_line((5*gridWidth*x,graphWindowLocation[0][1]), (5*gridWidth*x,graphWindowLocation[1][1]), color="black", width=1)
+    graph.draw_line((graphWindowLocation[0][0],0),(graphWindowLocation[1][0],0),color="black",width=4)
+    graph.draw_line((0,graphWindowLocation[0][1]), (0,graphWindowLocation[1][1]), color="black", width=4)
+    for x in range(math.floor(graphWindowLocation[0][0] / gridWidth), math.ceil(graphWindowLocation[1][0] / gridWidth)):
+        graph.DrawText(5*gridWidth*x, (5*gridWidth*x+gridWidth/1.5, -gridWidth), color='green')
+        graph.DrawText(5*gridWidth*x, (-gridWidth,5*gridWidth*x+gridWidth/1.5), color='blue')
+    for x in range(-100, 100):
+        y = math.sin(x / 20) * 50
+        graph.DrawCircle((x, y), 1, line_color='red', fill_color='red')
+    for x in range(-100, 100):
+        y = x
+        graph.DrawCircle((x, y), 1, line_color='blue', fill_color='blue')
 
 
 gridWidth = changeGrid(graphWindowLocation, gridWidth)
@@ -77,13 +92,26 @@ while True:
             window["buttonColumn"].update(visible=False)
             window["frameSize"].update(text=">")
             window["graph"].set_size((1415,650))
-
+            window["graph"].change_coordinates((graphWindowLocation[0][0] * 1.57, graphWindowLocation[0][1]),
+                                               (graphWindowLocation[1][0] * 1.57, graphWindowLocation[1][1]))
+            graphWindowLocation = [[graphWindowLocation[0][0] * 1.57, graphWindowLocation[0][1]],
+                                   [graphWindowLocation[1][0] * 1.57, graphWindowLocation[1][1]]]
+            graph.erase()
+            gridWidth = changeGrid(graphWindowLocation, gridWidth)
+            drawGrid(gridWidth, graphWindowLocation)
             inputColumnVisible =False
         elif inputColumnVisible==False:
             window["inputColumn"].update(visible=True)
             window["buttonColumn"].update(visible=True)
             window["frameSize"].update(text="<")
             window["graph"].set_size((900, 650))
+            window["graph"].change_coordinates((graphWindowLocation[0][0] / 1.57, graphWindowLocation[0][1]),
+                                               (graphWindowLocation[1][0] / 1.57, graphWindowLocation[1][1]))
+            graphWindowLocation = [[graphWindowLocation[0][0] / 1.57, graphWindowLocation[0][1]],
+                                   [graphWindowLocation[1][0] / 1.57, graphWindowLocation[1][1]]]
+            graph.erase()
+            gridWidth = changeGrid(graphWindowLocation, gridWidth)
+            drawGrid(gridWidth, graphWindowLocation)
             inputColumnVisible =True
     if event == "addFunction":
         print(layout)
