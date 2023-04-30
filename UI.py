@@ -1,5 +1,8 @@
 import PySimpleGUI as sg
 import math
+import time
+
+
 sg.theme('bluemono')
 font=('Franklin Gothic Book',16)
 basic = {'justification':'center'}
@@ -7,20 +10,21 @@ button= {'font':font}
 inputs={'font':('Franklin Gothic Book',20), 'text_color':'#000000','background_color':'#F7F7F7'}
 inputColumnVisible=True
 
-def InputItem(num, formula):
-    return [sg.Column(size=(1000,46),background_color='#859FCC',pad=0,layout=[[sg.Text(f'{num}. ',size=(3,2),pad=0,background_color='#859FCC'), sg.Input(**inputs,pad=0,key="inf"+str(num),size=(27,100),border_width=0,default_text=str(formula)), sg.Button('X',size=(2,1),button_color=('#F7F7F7','#859FCC'), key="infb"+str(num))],[sg.HorizontalSeparator(pad=(0,5),color='#53697c')]])]
+def InputItem(num):
+    return [sg.Column(size=(1000,46),background_color='#859FCC',pad=0,layout=[[sg.Text(f'{num}. ',size=(3,2),pad=0,background_color='#859FCC'), sg.Input(**inputs,pad=0,key="inf"+str(num),size=(27,100),border_width=0,enable_events=True), sg.Button('X',size=(2,1),button_color=('#F7F7F7','#859FCC'), key="deleteButton"+str(num))],[sg.HorizontalSeparator(pad=(0,5),color='#53697c')]])]
 topColumn=[[sg.Button('file',**button,size=(4,1),pad=(0,0),enable_events=True,key="file"),sg.Text("UniCalculator", **basic, size=105,font=('Franklin Gothic Book',20), background_color='#859FCC')]]
 inputColumn=[[sg.HorizontalSeparator(pad=(0,0),color='#53697c')]]
 sizeColumn=[[sg.Button('<',**button,size=(3,1),key="frameSize",pad=0,border_width=1)]]
 buttonColumn=[[sg.Button('+',**button,size=(3,1),key="addFunction",pad=0,border_width=1)]]
-zoomButtonColumn=[[sg.vbottom(sg.Button(image_source="zoom.png",key="zoomIn",border_width=0,pad=(0,10),image_subsample=10,button_color='#859FCC',image_size=(40,40)))],
-                  [sg.vbottom(sg.Button(image_source="zoom-out.png",key="zoomOut",pad=0,border_width=0,image_subsample=10,button_color='#859FCC',image_size=(40,40)))]]
+zoomButtonColumn=[[sg.vtop(sg.Button(image_source="zoom.png",key="zoomOut",border_width=0,pad=(0,0),image_subsample=15,image_size=(40,35)))],
+                [sg.vtop(sg.Button(image_source="zoom-out.png",key="zoomIn",pad=(0,5),border_width=0,image_subsample=15,image_size=(40,35)))],
+                  [sg.vbottom(sg.Button(image_source="run.png",key="run",border_width=0,pad=(0,15),image_subsample=10,image_size=(70,40)))]]
 
 functionList=[]
-
+functionNum=1
 layout=[
     [sg.pin(sg.Column(layout=topColumn,expand_x=True,size=(2000,50),pad=0))],
-    [sg.pin(sg.Column(layout=inputColumn,size=(500,665),background_color='#859FCC',pad=0,scrollable=True,vertical_scroll_only=True,key="inputColumn")),sg.pin(elem=sg.Graph(canvas_size=(900, 650), graph_bottom_left=(-10,-7.2), graph_top_right=(10,7.2),background_color='white',enable_events=True,float_values = True, drag_submits=True, key='graph'),vertical_alignment = None,shrink = True,expand_x = True,expand_y = True,),sg.vbottom(sg.Column(layout=zoomButtonColumn))],
+    [sg.pin(sg.Column(layout=inputColumn,size=(500,665),background_color='#859FCC',pad=0,scrollable=True,vertical_scroll_only=True,key="inputColumn")),sg.pin(elem=sg.Graph(canvas_size=(900, 650), graph_bottom_left=(-10,-7.222), graph_top_right=(10,7.222),background_color='white',enable_events=True,float_values = True, drag_submits=True,border_width=5, key='graph'),vertical_alignment = None,shrink = True,expand_x = True,expand_y = True,),sg.vbottom(sg.Column(layout=zoomButtonColumn))],
     [sg.pin(sg.Column(layout=sizeColumn,background_color='#859FCC',pad=0,size=(42,45),key="sizeColumn")),sg.pin(sg.Column(layout=buttonColumn,background_color='#859FCC',pad=0,size=(472,45),key="buttonColumn"))]
 ]
 window = sg.Window('My Title')
@@ -28,64 +32,59 @@ window.layout(layout)
 window.finalize()
 
 graph=window["graph"]
-for x in range(-100,100):
-    y = math.sin(x/20)*50
-    graph.DrawCircle((x,y), 1, line_color='red', fill_color='red')
-graphWindowLocation=[[-10,-7.2],[10,7.2]]
+graphWindowLocation=[[-10,-7.222],[10,7.222]]
 gridWidth=0.5
+graphInitialDrag=[]
+
+graphInitialTime=time.time()
+timeNow=time.time()
 
 def changeGrid(graphWindowLocation,gridWidth):
     if (graphWindowLocation[1][0]-graphWindowLocation[0][0])/gridWidth<40:
         gridWidth=gridWidth/2
     elif (graphWindowLocation[1][0]-graphWindowLocation[0][0])/gridWidth>80:
         gridWidth = gridWidth * 2
-    print(str(gridWidth))
+
     return gridWidth
 
 def drawGrid(gridWidth,graphWindowLocation):
-    print(graphWindowLocation)
-    print("a")
-    print(str(math.floor(graphWindowLocation[0][0]/gridWidth-1.00)))
-    print(str(math.ceil(graphWindowLocation[0][1]/gridWidth+1.00)))
-    for x in range(math.floor(graphWindowLocation[0][0]/gridWidth),math.ceil(graphWindowLocation[1][0]/gridWidth)):
-        graph.draw_line((graphWindowLocation[0][0], gridWidth*x), (graphWindowLocation[1][0], gridWidth*x), color="#bcbce0", width=1)
-        graph.draw_line((gridWidth*x,graphWindowLocation[0][1]), (gridWidth*x,graphWindowLocation[1][1]), color="#bcbce0", width=1)
+
+    for x in range(math.floor(graphWindowLocation[0][1]/gridWidth),math.ceil(graphWindowLocation[1][1]/gridWidth)):
+        if x%5==0:
+            graph.draw_line((graphWindowLocation[0][0], gridWidth * x),
+                            (graphWindowLocation[1][0], gridWidth * x), color="black", width=1)
+            graph.DrawText(gridWidth * x, (-gridWidth, gridWidth * x + gridWidth / 1.5), color='blue')
+        else:
+            graph.draw_line((graphWindowLocation[0][0], gridWidth*x), (graphWindowLocation[1][0], gridWidth*x), color="#bcbce0", width=1)
     for x in range(math.floor(graphWindowLocation[0][0] / gridWidth),math.ceil(graphWindowLocation[1][0] / gridWidth)):
-        graph.draw_line((graphWindowLocation[0][0], 5*gridWidth*x), (graphWindowLocation[1][0], 5*gridWidth*x), color="black", width=1)
-        graph.draw_line((5*gridWidth*x,graphWindowLocation[0][1]), (5*gridWidth*x,graphWindowLocation[1][1]), color="black", width=1)
+        if x%5==0:
+            graph.draw_line((gridWidth * x, graphWindowLocation[0][1]), (gridWidth * x, graphWindowLocation[1][1]),color="black", width=1)
+            graph.DrawText(gridWidth * x, (gridWidth * x + gridWidth / 1.5, -gridWidth), color='green')
+        else:
+            graph.draw_line((gridWidth*x,graphWindowLocation[0][1]), (gridWidth*x,graphWindowLocation[1][1]), color="#bcbce0", width=1)
     graph.draw_line((graphWindowLocation[0][0],0),(graphWindowLocation[1][0],0),color="black",width=4)
     graph.draw_line((0,graphWindowLocation[0][1]), (0,graphWindowLocation[1][1]), color="black", width=4)
-    for x in range(math.floor(graphWindowLocation[0][0] / gridWidth), math.ceil(graphWindowLocation[1][0] / gridWidth)):
-        graph.DrawText(5*gridWidth*x, (5*gridWidth*x+gridWidth/1.5, -gridWidth), color='green')
-        graph.DrawText(5*gridWidth*x, (-gridWidth,5*gridWidth*x+gridWidth/1.5), color='blue')
-    for x in range(-100, 100):
-        y = math.sin(x / 20) * 50
-        graph.DrawCircle((x, y), 1, line_color='red', fill_color='red')
-    for x in range(-100, 100):
-        y = x
-        graph.DrawCircle((x, y), 1, line_color='blue', fill_color='blue')
-
+    labelList=[]
+    for x in range(1,1000):
+        pointX=graphWindowLocation[0][0]+(graphWindowLocation[1][0]-graphWindowLocation[0][0])/1000*x
+        pointY = math.sin(pointX / 20) * 50
+        graph.DrawPoint((pointX,pointY),size=(graphWindowLocation[1][0]-graphWindowLocation[0][0])/200,color="red")
+        if pointY >=graphWindowLocation[0][1] and pointY <= graphWindowLocation[1][1]:
+            labelList.append(pointX)
+    if len(labelList)>0:
+        print(labelList)
+        print(labelList[math.floor(len(labelList)/2)])
+        graph.DrawText("y=50sin(x/20)", (labelList[math.floor(len(labelList)/2)],math.sin((labelList[math.floor(len(labelList)/2)]) / 20) * 50+gridWidth), color='black')
 
 gridWidth = changeGrid(graphWindowLocation, gridWidth)
 drawGrid(gridWidth, graphWindowLocation)
 
-
-def updateFunction(functionList):
-    inf = [InputItem(num=x, formula=functionList[x-1]) for x in range(1,len(functionList)+1)]+[[sg.Button('+',**button,size=(3,1),key="addFunction")]]
-    return inf
 while True:
     window.Size = (1500, 770)
     event, value = window.read()
-    print("event:",event)
-    print("value:",value)
-    print(layout)
-    # if str(event)[0]=="i" and str(event)[1]=="n" and str(event)[2]=="f"and str(event)[3]=="b":
-    #     del functionList[int(event[4:])-1]
-    #     for x in range(0,len(functionList)):
-    #         functionList[x] = value['inf'+str(x+1)]
-    #     inputFrame=updateFunction(functionList)
-    #
-    #     window["inputColumn"].contents_changed()
+    if event[0:3]=="inf":
+        functionList[int(event[3:])-1]=value[event]
+        print(functionList)
     if event == "frameSize":
         if inputColumnVisible==True:
             window["inputColumn"].update(visible=False)
@@ -114,28 +113,70 @@ while True:
             drawGrid(gridWidth, graphWindowLocation)
             inputColumnVisible =True
     if event == "addFunction":
-        print(layout)
         functionList.append("")
-        inputFrame = updateFunction(functionList)
-        print(functionList)
-        window.extend_layout(container=window['inputColumn'],rows=[InputItem(len(functionList),"")])
+        window.extend_layout(container=window['inputColumn'],rows=[InputItem(functionNum)])
         window["inputColumn"].contents_changed()
+        functionNum+=1
     if event == "zoomIn":
-        window["graph"].change_coordinates((graphWindowLocation[0][0]*1.5,graphWindowLocation[0][1]*1.5),(graphWindowLocation[1][0]*1.5,graphWindowLocation[1][1]*1.5))
-        graphWindowLocation=[[graphWindowLocation[0][0]*1.5,graphWindowLocation[0][1]*1.5],[graphWindowLocation[1][0]*1.5,graphWindowLocation[1][1]*1.5]]
-        graph.erase()
-        print(graphWindowLocation)
-        gridWidth=changeGrid(graphWindowLocation,gridWidth)
-        drawGrid(gridWidth,graphWindowLocation)
+        timeNow = time.time()
+        if timeNow-graphInitialTime>=0.15:
+            window["graph"].change_coordinates((graphWindowLocation[0][0]*1.5,graphWindowLocation[0][1]*1.5),(graphWindowLocation[1][0]*1.5,graphWindowLocation[1][1]*1.5))
+            graphWindowLocation=[[graphWindowLocation[0][0]*1.5,graphWindowLocation[0][1]*1.5],[graphWindowLocation[1][0]*1.5,graphWindowLocation[1][1]*1.5]]
+            graph.erase()
+            gridWidth=changeGrid(graphWindowLocation,gridWidth)
+            drawGrid(gridWidth,graphWindowLocation)
+            graphInitialTime = time.time()
+        else:
+            graph.erase()
+            gridWidth=changeGrid(graphWindowLocation,gridWidth)
+            drawGrid(gridWidth,graphWindowLocation)
     if event == "zoomOut":
-        window["graph"].change_coordinates((graphWindowLocation[0][0]/1.5,graphWindowLocation[0][1]/1.5),(graphWindowLocation[1][0]/1.5,graphWindowLocation[1][1]/1.5))
-        graphWindowLocation=[[graphWindowLocation[0][0]/1.5,graphWindowLocation[0][1]/1.5],[graphWindowLocation[1][0]/1.5,graphWindowLocation[1][1]/1.5]]
-        graph.erase()
-        print(graphWindowLocation)
-        gridWidth=changeGrid(graphWindowLocation,gridWidth)
-        drawGrid(gridWidth,graphWindowLocation)
-    if event[0:4] == "graph":
-        pass
+        timeNow = time.time()
+        if timeNow - graphInitialTime >= 0.15:
+            window["graph"].change_coordinates((graphWindowLocation[0][0]/1.5,graphWindowLocation[0][1]/1.5),(graphWindowLocation[1][0]/1.5,graphWindowLocation[1][1]/1.5))
+            graphWindowLocation=[[graphWindowLocation[0][0]/1.5,graphWindowLocation[0][1]/1.5],[graphWindowLocation[1][0]/1.5,graphWindowLocation[1][1]/1.5]]
+            graph.erase()
+            gridWidth=changeGrid(graphWindowLocation,gridWidth)
+            drawGrid(gridWidth,graphWindowLocation)
+            graphInitialTime = time.time()
+        else:
+            graph.erase()
+            gridWidth=changeGrid(graphWindowLocation,gridWidth)
+            drawGrid(gridWidth,graphWindowLocation)
+    if event[0:5] == "graph":
+        print(value)
+        if graphInitialDrag==[]:
+            graphInitialDrag=[value['graph'][0],value['graph'][1]]
+            graphInitialTime = time.time()
+        if event=="graph+UP":
+            timeNow=time.time()
+            if timeNow-graphInitialTime>=0.05:
+                window["graph"].change_coordinates((graphWindowLocation[0][0]+2*(-value['graph'][0]+graphInitialDrag[0]), graphWindowLocation[0][1]+2*(-value['graph'][1]+graphInitialDrag[1])),(graphWindowLocation[1][0]+2*(-value['graph'][0]+graphInitialDrag[0]), graphWindowLocation[1][1]+2*(-value['graph'][1]+graphInitialDrag[1])))
+                graphWindowLocation=[[graphWindowLocation[0][0]+2*(-value['graph'][0]+graphInitialDrag[0]), graphWindowLocation[0][1]+2*(-value['graph'][1]+graphInitialDrag[1])],[graphWindowLocation[1][0]+2*(-value['graph'][0]+graphInitialDrag[0]), graphWindowLocation[1][1]+2*(-value['graph'][1]+graphInitialDrag[1])]]
+                graph.erase()
+                drawGrid(gridWidth, graphWindowLocation)
+                graphInitialDrag = []
+                graphInitialTime = time.time()
+            else:
+                graph.erase()
+                drawGrid(gridWidth, graphWindowLocation)
+                graphInitialDrag = []
+        else:
+            timeNow=time.time()
+            if timeNow-graphInitialTime>=0.05:
+                window["graph"].change_coordinates((graphWindowLocation[0][0]+2*(-value['graph'][0]+graphInitialDrag[0]), graphWindowLocation[0][1]+2*(-value['graph'][1]+graphInitialDrag[1])),(graphWindowLocation[1][0]+2*(-value['graph'][0]+graphInitialDrag[0]), graphWindowLocation[1][1]+2*(-value['graph'][1]+graphInitialDrag[1])))
+                graphWindowLocation=[[graphWindowLocation[0][0]+2*(-value['graph'][0]+graphInitialDrag[0]), graphWindowLocation[0][1]+2*(-value['graph'][1]+graphInitialDrag[1])],[graphWindowLocation[1][0]+2*(-value['graph'][0]+graphInitialDrag[0]), graphWindowLocation[1][1]+2*(-value['graph'][1]+graphInitialDrag[1])]]
+                graph.erase()
+                drawGrid(gridWidth, graphWindowLocation)
+                graphInitialDrag = [value['graph'][0], value['graph'][1]]
+                graphInitialTime=time.time()
+            else:
+                graph.erase()
+                drawGrid(gridWidth, graphWindowLocation)
+                graphInitialDrag = [value['graph'][0], value['graph'][1]]
+
+
+
     if event == sg.WIN_CLOSED:
         break
 window.close()
